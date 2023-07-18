@@ -43,9 +43,6 @@ module.exports = {
       fs.writeFileSync(txtFile, txtEntry.getData().toString('utf8'));
 
       let contenido1 = fs.readFileSync(txtFile, 'utf8').split(/(\|RST|\|NORMAL|\|PST)(\r\n)/).filter((elem) => elem.trim() !== '');
-      // let contenido2 = fs.readFileSync(txtFile, 'utf8').split('\r\n');
-
-      // console.log("cantidad1",contenido1);
 
       const resultadoFinal = [];
       for (let i = 0; i < contenido1.length; i += 2) {
@@ -56,45 +53,32 @@ module.exports = {
         }
       }
 
-      console.log(resultadoFinal.length);
-      // console.log(contenido2.length);
-
-      // console.log(resultadoFinal);
-
-      // console.log(contenido1.length);
-      let linea = [];
-      let lineaAux = [];
       let contenido = [];
 
       contenido = resultadoFinal.map((value) => {
         let lineaAux = value.split('|');
         return {
-          cedula_RNC: lineaAux[0], //confirmado
-          nombre_RazonSocial: lineaAux[1], //confirmado
-          nombreComercial: lineaAux[2], //confirmado
-          regimenPagos: lineaAux[10], //confirmado
-          estado: lineaAux[9], //confirmado
-          actividadEconomica: lineaAux[3],//confirmado
-          fecha: lineaAux[8], //confirmado
+          cedula_RNC: lineaAux[0].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //confirmado
+          nombre_RazonSocial: lineaAux[1].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //confirmado
+          nombreComercial: lineaAux[2].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //confirmado
+          regimenPagos: lineaAux[10].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //confirmado
+          estado: lineaAux[9].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //confirmado
+          actividadEconomica: lineaAux[3].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(),//confirmado
+          fecha: lineaAux[8].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //confirmado
           categoria: '',
           administracionLocal: '', //nunca encontrado
-          campo4: lineaAux[4], //siempre vacio sin confirmar
-          campo5: lineaAux[5], //siempre vacio sin confirmar
-          campo6: lineaAux[6], //siempre vacio sin confirmar
-          campo7: lineaAux[7], //siempre vacio sin confirmar
+          campo4: lineaAux[4].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
+          campo5: lineaAux[5].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
+          campo6: lineaAux[6].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
+          campo7: lineaAux[7].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
         };
 
       });
 
-      // console.log(contenido.filter((value) => value.cedula_RNC === '02300271943'));
-      // console.log(contenido.filter((value) => value.cedula_RNC === '00101483410'));
-      // console.log(contenido.filter((value) => value.regimenPagos === '' || value.regimenPagos === ' ' || value.regimenPagos === null || value.regimenPagos === undefined));
-      // console.log(contenido.filter((value) => value.categoria !== '' && value.categoria !== ' ' && value.categoria !== null && value.categoria !== undefined));
+      let rncsCreados = await Rnc.createEach(contenido).fetch();
 
+      return res.status(200).send("Se han creado " + rncsCreados.length + " RNCs.");
 
-
-
-      return res.status(200).send(contenido);
     } catch (error) {
       return res.status(500).send('Error al descargar y descomprimir el archivo: ' + error.message);
     }
@@ -140,12 +124,13 @@ module.exports = {
         const tabla = await document.querySelector('#ctl00_cphMain_dvDatosContribuyentes');
         const filas = tabla.querySelectorAll('tr');
 
-        const datos = [];
+        const datos = {};
 
-        for (let i = 1; i < filas.length; i++) {
+        for (let i = 0; i < filas.length; i++) {
           const celdas = filas[i].querySelectorAll('td');
-          const dato = celdas[1].innerText.trim();
-          datos.push(dato);
+          const dato = celdas[0].innerText.trim();
+          const valor = celdas[1].innerText.trim();
+          datos[dato] = valor;
         }
 
         return datos;
@@ -164,5 +149,75 @@ module.exports = {
       return res.serverError('Ocurrió un error al consultar los datos.');
     }
   },
-};
+  buscarLocal: async (req, res) => {
+    try {
+      const filter = req.query.filter;
 
+      if (!filter) {
+        const rncs = await Rnc.find().limit(10);
+        if (rncs.length > 0) {
+          return res.ok(rncs);
+        }
+
+        return res.notFound('No se encontraron RNCs.');
+      }
+
+      const rncs = await Rnc.find(
+        {
+          where: {
+            or: [
+              { cedula_RNC: { contains: filter } },
+              { nombre_RazonSocial: { contains: filter } },
+              { nombreComercial: { contains: filter } },
+              { actividadEconomica: { contains: filter } },
+              { estado: { contains: filter } },
+              { regimenPagos: { contains: filter } },
+              { fecha: { contains: filter } },
+              { categoria: { contains: filter } },
+              { administracionLocal: { contains: filter } },
+            ]
+          }
+        }
+      )
+        .meta({ makeLikeModifierCaseInsensitive: true })
+        .limit(20);
+
+      if (rncs.length > 0) {
+        return res.ok(rncs);
+      }
+
+      return res.notFound('No se encontraron RNCs.');
+    }
+    catch (error) {
+      console.error('Error al realizar el scraping:', error);
+      return res.serverError('Ocurrió un error al consultar los datos.');
+    }
+  },
+  buscarLocalPorRnc: async (req, res) => {
+    try {
+      const filter = req.query.filter;
+
+      if (!filter) {
+        const rncs = await Rnc.find().limit(10);
+        if (rncs.length > 0) {
+          return res.ok(rncs);
+        }
+
+        return res.notFound('No se encontraron RNCs.');
+      }
+
+      const rncs = await Rnc.findOne({ cedula_RNC: { contains: filter } })
+        .meta({ makeLikeModifierCaseInsensitive: true })
+
+      if (rncs) {
+        return res.ok(rncs);
+      }
+
+      return res.notFound('No se encontraron RNCs.');
+    }
+    catch (error) {
+      console.error('Error al realizar el scraping:', error);
+      return res.serverError('Ocurrió un error al consultar los datos.');
+    }
+  }
+};
