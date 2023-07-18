@@ -70,7 +70,7 @@ module.exports = {
           campo4: lineaAux[4].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
           campo5: lineaAux[5].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
           campo6: lineaAux[6].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
-          campo7: lineaAux[7].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(), //siempre vacio sin confirmar
+          campo7: lineaAux[7].replace(/(\w+)\s{2,}(\w+)/g, '$1 $2').trim(),
         };
 
       });
@@ -78,6 +78,8 @@ module.exports = {
       let rncsCreados = await Rnc.createEach(contenido).fetch();
 
       return res.status(200).send("Se han creado " + rncsCreados.length + " RNCs.");
+
+
 
     } catch (error) {
       return res.status(500).send('Error al descargar y descomprimir el archivo: ' + error.message);
