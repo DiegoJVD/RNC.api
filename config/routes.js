@@ -19,8 +19,11 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
+  'GET /api/v1': 'InfoController.info',
+  'GET /api/v1/info': 'InfoController.info',
   'GET /api/v1/rnc/importarDesdeZip': 'RncController.importarDesdeZip',
   'GET /api/v1/rnc/scrapear': 'RncController.scrapear',
+  'GET /api/v1/rnc/buscarLocal': 'RncController.buscarLocal',
 
   /***************************************************************************
   *                                                                          *
