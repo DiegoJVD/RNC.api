@@ -75,8 +75,24 @@ module.exports = {
 
       });
 
-      let rncsCreados = await Rnc.createEach(contenido).fetch();
+      //crear rncs pero solo si no existen
+      // let rncsCreados = [];
+      // for (let i = 0; i < contenido.length; i++) {
+      //   let rnc = await Rnc.findOne({ cedula_RNC: contenido[i].cedula_RNC });
+      //   if (!rnc) {
+      //     rnc = await Rnc.create(contenido[i]).fetch();
+      //     rncsCreados.push(rnc);
+      //   }
+      //   else {
+      //     rnc = await Rnc.updateOne({ cedula_RNC: contenido[i].cedula_RNC }).set(contenido[i]);
+      //     rncsCreados.push(rnc);
+      //   }
+      // }
+      let rncsEliminados = await Rnc.destroy({}).fetch();
 
+    //  console.log(rncsEliminados);
+
+      let rncsCreados = await Rnc.createEach(contenido).fetch();
       return res.status(200).send("Se han creado " + rncsCreados.length + " RNCs.");
 
 
@@ -87,7 +103,6 @@ module.exports = {
   },
   scrapear: async (req, res) => {
     try {
-      console.log(req.query.rnc);
       const rnc = req.query.rnc;
 
       if (!rnc) {
@@ -99,28 +114,20 @@ module.exports = {
       // Navega a la página web
       await page.goto('https://www.dgii.gov.do/app/WebApps/ConsultasWeb/consultas/rnc.aspx#');
 
-      // Espera a que se cargue la página y se muestre el formulario
       await page.waitForSelector('#ctl00_cphMain_txtRNCCedula');
 
-      console.log('Formulario encontrado');
 
       // Ingresa el código de búsqueda en el campo adecuado
       await page.type('#ctl00_cphMain_txtRNCCedula', rnc);
 
-      console.log('Código de búsqueda ingresado');
-
       // Haz clic en el botón de búsqueda
       await page.click('#ctl00_cphMain_btnBuscarPorRNC');
-
-      console.log('Botón de búsqueda presionado');
 
       // Espera un tiempo adicional para que se carguen los resultados
       await page.waitForTimeout(5000);
 
       // Espera a que se carguen los resultados
       await page.waitForSelector('#ctl00_cphMain_dvDatosContribuyentes');
-
-      console.log('Resultados encontrados');
 
       const datosEncontrados = await page.evaluate(async () => {
         const tabla = await document.querySelector('#ctl00_cphMain_dvDatosContribuyentes');
@@ -140,9 +147,10 @@ module.exports = {
         console.error('Error al evaluar la página:', error);
       });
 
-      console.log('Datos encontrados:', datosEncontrados);
+      if(Object.keys(datosEncontrados).length === 0) {
+        return res.badRequest('No se encontraron datos para el RNC especificado.');
+      }
 
-      // Cierra el navegador
       await browser.close();
 
       return res.ok(datosEncontrados);
@@ -161,7 +169,7 @@ module.exports = {
           return res.ok(rncs);
         }
 
-        return res.notFound('No se encontraron RNCs.');
+        return res.badRequest('No se encontraron RNCs.');
       }
 
       const rncs = await Rnc.find(

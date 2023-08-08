@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 module.exports = {
   apps: [{
     name: "rnc-api",
@@ -9,5 +8,4 @@ module.exports = {
     }
   }]
 };
-=======
->>>>>>> ccdb65e88e727e89a417678df2e1ba3e0f5665b5
+
