@@ -229,5 +229,8 @@ module.exports = {
       console.error('Error al realizar el scraping:', error);
       return res.serverError('Ocurrió un error al consultar los datos.');
     }
+  },
+  prueba : async (req, res) => {
+    console.log("hola");
   }
 };
