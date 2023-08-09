@@ -5,11 +5,9 @@ module.exports = {
       script: './app.js',
       instances: 1,
       autorestart: true,
-      watch: false,
-      max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 323
+        PORT: 325
       }
     },
     {
@@ -17,10 +15,8 @@ module.exports = {
       script: './scheduler.js',
       instances: 1,
       autorestart: true,
-      watch: false,
-      max_memory_restart: '1G',
       env: {
-        PORT: 324 // Ajusta el puerto aquí
+        PORT: 326
       }
     }
   ]
