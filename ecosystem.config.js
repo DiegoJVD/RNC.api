@@ -1,24 +1,27 @@
 module.exports = {
   apps: [
     {
-      name: 'rnc-api', // Cambia esto al nombre de tu aplicación
-      script: './app.js', // Cambia esto al nombre de tu archivo principal de Sails.js
+      name: 'rnc-api',
+      script: './app.js',
       instances: 1,
       autorestart: true,
       watch: false,
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
-        PORT: 3000 // Puerto que deseas utilizar (por defecto 1337 para Sails.js)
+        PORT: 323
       }
     },
     {
       name: 'scheduler de rnc-api',
-      script: './scheduler.js', // Ajusta esto al nombre de tu archivo scheduler.js
+      script: './scheduler.js',
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: '1G'
+      max_memory_restart: '1G',
+      env: {
+        PORT: 324 // Ajusta el puerto aquí
+      }
     }
   ]
 };
