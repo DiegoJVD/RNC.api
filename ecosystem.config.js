@@ -17,7 +17,7 @@ module.exports = {
       instances: 1,
       autorestart: true,
       watch: false,
-      max_memory_restart: '1G',
+      // max_memory_restart: '1G',
       exec_interpreter: 'node', // Agrega esta línea para ejecutar el script directamente con Node.js
       exec_mode: 'fork', // Cambia a 'fork' para ejecutar en el mismo proceso
       env: {
